@@ -1,0 +1,259 @@
+<!DOCTYPE html><html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>معرض الصور</title>
+  <style>
+    :root {
+      --bg-color: #f0f0f0;
+      --text-color: #333;
+      --card-bg: #fff;
+      --button-bg: #fff;
+      --button-hover: #333;
+      --button-color: #000;
+      --modal-bg: rgba(0, 0, 0, 0.8);
+    }body.dark {
+  --bg-color: #121212;
+  --text-color: #eee;
+  --card-bg: #1e1e1e;
+  --button-bg: #2a2a2a;
+  --button-hover: #444;
+  --button-color: #eee;
+  --modal-bg: rgba(255, 255, 255, 0.1);
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: var(--bg-color);
+  margin: 0;
+  padding: 20px;
+  direction: rtl;
+  transition: background 0.3s, color 0.3s;
+}
+h1 {
+  text-align: center;
+  margin-bottom: 10px;
+  color: var(--text-color);
+}
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.controls button, .controls input {
+  background: var(--button-bg);
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 6px;
+  color: var(--button-color);
+}
+.controls button:hover {
+  background: var(--button-hover);
+  color: #fff;
+}
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+.item {
+  background: var(--card-bg);
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+}
+.item:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+.item img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  display: block;
+}
+.caption {
+  padding: 12px;
+  text-align: center;
+  font-weight: bold;
+  color: var(--text-color);
+}
+.hidden {
+  display: none;
+}
+.download-btn {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0,0,0,0.5);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 5px;
+  cursor: pointer;
+}
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 999;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background: var(--modal-bg);
+  justify-content: center;
+  align-items: center;
+}
+.modal img {
+  max-width: 90vw;
+  max-height: 90vh;
+  border-radius: 10px;
+}
+.count {
+  text-align: center;
+  margin-bottom: 10px;
+  color: var(--text-color);
+}
+form#addForm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+form#addForm input, form#addForm select {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  width: 300px;
+}
+
+  </style>
+</head>
+<body>  <h1>معرض الصور</h1>  <div class="controls">
+    <button id="toggleTheme">الوضع الليلي / النهاري</button>
+    <button class="filter-btn active" data-filter="all">الكل</button>
+    <button class="filter-btn" data-filter="team">فرق كرة القدم</button>
+    <button class="filter-btn" data-filter="player">لاعبين كرة القدم</button>
+    <button class="filter-btn" data-filter="logo">شعارات السيارات</button>
+    <button class="filter-btn" data-filter="car">السيارات</button>
+    <input type="text" id="searchInput" placeholder="ابحث عن صورة..." />
+  </div>  <form id="addForm">
+    <input type="text" id="newCaption" placeholder="وصف الصورة" required />
+    <input type="url" id="newURL" placeholder="رابط الصورة" required />
+    <select id="newCategory">
+      <option value="team">فريق</option>
+      <option value="player">لاعب</option>
+      <option value="logo">شعار</option>
+      <option value="car">سيارة</option>
+    </select>
+    <button type="submit">إضافة صورة</button>
+  </form>  <div class="count" id="imageCount">عدد الصور: 0</div>  <div class="gallery" id="gallery">
+    <!-- الصور ستظهر هنا -->
+  </div>  <div class="modal" id="imageModal">
+    <img src="" alt="عرض الصورة" id="modalImg" />
+  </div>  <script>
+    const imagesData = [
+      {src: 'https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg', caption: 'فريق أرسنال', category: 'team'},
+      {src: 'https://upload.wikimedia.org/wikipedia/en/7/7a/Chelsea_FC.svg', caption: 'فريق تشيلسي', category: 'team'},
+      {src: 'https://upload.wikimedia.org/wikipedia/commons/6/6e/Lionel_Messi_20180626.jpg', caption: 'ليونيل ميسي', category: 'player'},
+      {src: 'https://upload.wikimedia.org/wikipedia/commons/8/8c/Cristiano_Ronaldo_2018.jpg', caption: 'كريستيانو رونالدو', category: 'player'},
+      {src: 'https://upload.wikimedia.org/wikipedia/commons/9/9f/Toyota_logo.png', caption: 'شعار تويوتا', category: 'logo'},
+      {src: 'https://upload.wikimedia.org/wikipedia/commons/4/4e/BMW_logo_%282017%29.svg', caption: 'شعار بي إم دبليو', category: 'logo'},
+      {src: 'https://upload.wikimedia.org/wikipedia/commons/7/7e/2020_Tesla_Model_3_Performance%2C_front_9.12.20.jpg', caption: 'سيارة تسلا موديل 3', category: 'car'},
+      {src: 'https://upload.wikimedia.org/wikipedia/commons/9/9c/2019_BMW_M4_Competition_Coupe.jpg', caption: 'سيارة بي إم دبليو M4', category: 'car'}
+    ];
+
+    const gallery = document.getElementById('gallery');
+    const countDisplay = document.getElementById('imageCount');
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImg');
+    const searchInput = document.getElementById('searchInput');
+    const addForm = document.getElementById('addForm');
+    const newCaption = document.getElementById('newCaption');
+    const newURL = document.getElementById('newURL');
+    const newCategory = document.getElementById('newCategory');
+
+    let currentFilter = 'all';
+
+    function renderGallery() {
+      gallery.innerHTML = '';
+      let visibleCount = 0;
+      const query = searchInput.value.toLowerCase();
+
+      imagesData.forEach(image => {
+        const matchesFilter = currentFilter === 'all' || image.category === currentFilter;
+        const matchesSearch = image.caption.toLowerCase().includes(query);
+
+        if (matchesFilter && matchesSearch) {
+          const div = document.createElement('div');
+          div.className = `item ${image.category}`;
+          div.innerHTML = `
+            <button class="download-btn" onclick="event.stopPropagation(); window.open('${image.src}', '_blank')">⬇</button>
+            <img src="${image.src}" alt="${image.caption}" />
+            <div class="caption">${image.caption}</div>
+          `;
+          div.querySelector('img').addEventListener('click', () => {
+            modalImg.src = image.src;
+            modal.style.display = 'flex';
+          });
+          gallery.appendChild(div);
+          visibleCount++;
+        }
+      });
+      countDisplay.textContent = `عدد الصور: ${visibleCount}`;
+    }
+
+    document.querySelectorAll('.filter-btn').forEach(button => {
+      button.addEventListener('click', () => {
+        document.querySelector('.filter-btn.active').classList.remove('active');
+        button.classList.add('active');
+        currentFilter = button.getAttribute('data-filter');
+        renderGallery();
+      });
+    });
+
+    document.getElementById('toggleTheme').addEventListener('click', () => {
+      document.body.classList.toggle('dark');
+    });
+
+    searchInput.addEventListener('input', renderGallery);
+
+    modal.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+
+    let slideshowIndex = 0;
+    setInterval(() => {
+      if (!document.hidden) {
+        const allVisibleImages = Array.from(gallery.querySelectorAll('img'));
+        if (allVisibleImages.length > 0) {
+          slideshowIndex = (slideshowIndex + 1) % allVisibleImages.length;
+          allVisibleImages[slideshowIndex].click();
+        }
+      }
+    }, 10000);
+
+    addForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const image = {
+        src: newURL.value.trim(),
+        caption: newCaption.value.trim(),
+        category: newCategory.value
+      };
+      imagesData.push(image);
+      newURL.value = '';
+      newCaption.value = '';
+      renderGallery();
+    });
+
+    renderGallery();
+  </script></body>
+</html>
